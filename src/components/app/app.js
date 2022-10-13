@@ -12,10 +12,12 @@ class App extends Component {
       super(props);
       this.state = {
          data: [
-            {name: 'Эмиль', salary: 100, increase: true, id: 1},
-            {name: 'Антон', salary: 5000, increase: true, id: 2},
-            {name: 'Карл', salary: 1100, increase: false, id: 3},
+            {name: 'Эмиль', salary: 100, increase: true, liked: true, id: 1},
+            {name: 'Антон', salary: 5000, increase: true, liked: false, id: 2},
+            {name: 'Карл', salary: 1100, increase: false, liked: true, id: 3},
          ],
+         term: '',
+         filter: 'all',
          id: 3,
       }
    }
@@ -38,16 +40,78 @@ class App extends Component {
       })
    }
 
+   onToggleIncrease = (id) => {
+      this.setState(({data}) => ({
+         data: data.map(item => {
+            if(item.id === id) {
+               return {...item, increase: !item.increase}
+            }
+            return item
+         })
+      }))
+   }
+
+   onToggleLiked = (id) => {
+      this.setState(({data}) => ({
+         data: data.map(item => {
+            if(item.id === id) {
+               return {...item, liked: !item.liked}
+            }
+            return item
+         })
+      }))
+   }
+
+   onSearchChange = (items, term) => {
+      if (term.length === 0) {
+         return items;
+      }
+
+      return items.filter(item => {
+         return item.name.indexOf(term) > -1;
+      })
+   }
+
+   onValueChange = (term) => {
+      this.setState({term: term})
+   }
+
+   filterChange = (items, filter) => {
+      switch(filter) {
+         case 'rise': 
+            return items.filter(item => item.liked);
+         case 'moreThan1000':
+            return items.filter(item => item.salary > 1000);
+         default: 
+            return items
+      }
+   }
+
+   onFilterChange = (filter) => {
+      this.setState({filter})
+   }
+
    render() {
-      const {data} = this.state;
+      const {data, term, filter} = this.state;
+      const newData = this.filterChange(this.onSearchChange(data, term), filter);
       return (
          <div className="app">
-            <AppInfo/>
+            <AppInfo 
+               employees={this.state.data.length}
+               getMoney={this.state.data.filter(item => item.increase).length}
+            />
             <div className="search-panel">
-               <SearchPanel/>
-               <AppFilter/>
+               <SearchPanel
+                  onValueChange={this.onValueChange}/>
+               <AppFilter
+                  filter={filter}
+                  onFilterChange={this.onFilterChange}/>
             </div>
-            <Employerslist data={data} onDelete={this.deleteItem}/>
+            <Employerslist 
+               data={newData} 
+               onDelete={this.deleteItem}
+               onToggleIncrease={this.onToggleIncrease}
+               onToggleLiked={this.onToggleLiked}/>
             <EmployersAddForm onAdd={this.addItem}/>
          </div>
       );
